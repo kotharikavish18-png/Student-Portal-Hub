@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Table — Student Hub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+
+    .tt-wrap {
+      overflow-x: auto;
+      border-radius: 20px;
+      border: 1.5px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .tt-grid {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    /* ── Header row: TIME slots on top ── */
+    .tt-grid thead th {
+      padding: 14px 6px;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
+      color: rgba(255,255,255,0.45);
+      border-bottom: 1.5px solid rgba(255,255,255,0.08);
+      white-space: nowrap;
+    }
+    .tt-grid thead th:first-child {
+      text-align: left;
+      padding-left: 18px;
+      width: 100px;
+      color: rgba(255,255,255,0.25);
+    }
+    .tt-grid thead th.active-time {
+      color: #4a9eff;
+    }
+
+    /* ── Body rows: DAYS on left ── */
+    .tt-grid tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+    }
+    .tt-grid tbody tr:last-child { border-bottom: none; }
+    .tt-grid tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+    /* Day label cell */
+    .day-label {
+      padding: 10px 10px 10px 18px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      vertical-align: middle;
+      border-right: 1.5px solid rgba(255,255,255,0.07);
+    }
+    .day-Mon { color: #4a9eff; }
+    .day-Tue { color: #ff6eb4; }
+    .day-Wed { color: #6ee7b7; }
+    .day-Thu { color: #fbbf24; }
+    .day-Fri { color: #a78bfa; }
+    .day-Sat { color: #fb923c; }
+    .day-Sun { color: #f87171; }
+
+    /* Time slot cells */
+    .slot-cell {
+      padding: 6px 5px;
+      vertical-align: middle;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.04);
+      min-width: 90px;
+      height: 64px;
+      position: relative;
+    }
+    .slot-cell:last-child { border-right: none; }
+
+    /* Class chip inside cell */
+    .class-chip {
+      border-radius: 10px;
+      padding: 6px 8px;
+      text-align: left;
+      position: relative;
+      cursor: default;
+      animation: popIn 0.22s ease;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform:scale(0.9); }
+      to   { opacity:1; transform:scale(1); }
+    }
+
+    /* Multi-slot chip spans columns — handled via colspan on td */
+    .chip-blue   { background: linear-gradient(135deg,rgba(74,158,255,0.22),rgba(110,198,255,0.12)); border:1px solid rgba(74,158,255,0.35); }
+    .chip-pink   { background: linear-gradient(135deg,rgba(255,110,180,0.22),rgba(255,60,142,0.1));  border:1px solid rgba(255,110,180,0.35); }
+    .chip-green  { background: linear-gradient(135deg,rgba(110,231,183,0.22),rgba(110,231,183,0.1)); border:1px solid rgba(110,231,183,0.35); }
+    .chip-yellow { background: linear-gradient(135deg,rgba(251,191,36,0.22),rgba(251,191,36,0.1));   border:1px solid rgba(251,191,36,0.35); }
+    .chip-purple { background: linear-gradient(135deg,rgba(167,139,250,0.22),rgba(167,139,250,0.1)); border:1px solid rgba(167,139,250,0.35); }
+    .chip-orange { background: linear-gradient(135deg,rgba(251,146,60,0.22),rgba(251,146,60,0.1));   border:1px solid rgba(251,146,60,0.35); }
+
+    .chip-subject {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chip-location {
+      font-size: 10px;
+      color: rgba(255,255,255,0.45);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .chip-hours {
+      font-size: 9px;
+      color: rgba(255,255,255,0.3);
+      margin-top: 2px;
+    }
+    .chip-delete {
+      position: absolute;
+      top: 3px; right: 3px;
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      background: rgba(255,80,80,0.25);
+      border: none;
+      color: #ff8080;
+      font-size: 8px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    .class-chip:hover .chip-delete { opacity: 1; }
+
+    /* Add button */
+    .add-slot-btn {
+      width: 100%; height: 100%;
+      background: transparent;
+      border: 1.5px dashed rgba(255,255,255,0.07);
+      border-radius: 10px;
+      color: rgba(255,255,255,0.18);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .add-slot-btn:hover {
+      border-color: rgba(74,158,255,0.45);
+      color: #4a9eff;
+      background: rgba(74,158,255,0.06);
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(8,18,40,0.8);
+      backdrop-filter: blur(10px);
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-box {
+      background: #0d1f4a;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 24px;
+      padding: 36px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      animation: slideUp 0.28s cubic-bezier(.23,1,.32,1);
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .modal-title { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:#fff; margin-bottom:4px; }
+    .modal-sub   { font-size:13px; color:rgba(255,255,255,0.4); margin-bottom:22px; }
+    .modal-actions { display:flex; gap:10px; margin-top:18px; }
+    .modal-actions .btn { flex:1; text-align:center; }
+
+    /* Duration selector */
+    .duration-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .dur-btn {
+      padding: 7px 14px;
+      border-radius: 50px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.5);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .dur-btn:hover { border-color: rgba(74,158,255,0.5); color: #4a9eff; }
+    .dur-btn.selected {
+      background: linear-gradient(135deg,#4a9eff,#6ec6ff);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    /* Color dots */
+    .color-picker { display:flex; gap:8px; margin-top:6px; }
+    .color-dot {
+      width:24px; height:24px; border-radius:50%;
+      cursor:pointer; border:2px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .color-dot:hover { transform:scale(1.2); }
+    .color-dot.selected { border-color:#fff; transform:scale(1.2); }
+    .color-dot.blue   { background:#4a9eff; }
+    .color-dot.pink   { background:#ff6eb4; }
+    .color-dot.green  { background:#6ee7b7; }
+    .color-dot.yellow { background:#fbbf24; }
+    .color-dot.purple { background:#a78bfa; }
+    .color-dot.orange { background:#fb923c; }
+
+    /* Legend bar */
+    .tt-legend {
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+      padding: 12px 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body class="page-body">
+
+  <header class="page-topbar">
+    <a href="index.html" class="back-btn">← Back</a>
+    <span class="page-title">Time Table</span>
+    <nav class="topbar-nav" id="pageNav"></nav>
+  </header>
+
+  <main class="page-content" style="max-width:1150px;">
+
+    <div class="tt-legend">
+      <span>💡 Click <strong style="color:#fff">+</strong> in any cell to add a class</span>
+      <span>·</span>
+      <span>⏱ Choose 1hr or 2hr — 2hr class merges the two time slots</span>
+      <span>·</span>
+      <span>🖱 Hover a class to delete it</span>
+    </div>
+
+    <div class="tt-wrap">
+      <table class="tt-grid" id="ttTable">
+        <!-- built by JS -->
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="ttModal" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-title">Add Class</div>
+      <div class="modal-sub" id="modalSubtitle">—</div>
+
+      <div class="form-group">
+        <label>Subject Name</label>
+        <input type="text" id="mSubject" placeholder="e.g. Data Structures"/>
+      </div>
+      <div class="form-group">
+        <label>Location / Room</label>
+        <input type="text" id="mLocation" placeholder="e.g. Room 204 / Online"/>
+      </div>
+
+      <div class="form-group">
+        <label>Duration</label>
+        <div class="duration-row">
+          <button class="dur-btn selected" data-dur="1" onclick="selectDur(this)">1 Hour</button>
+          <button class="dur-btn"          data-dur="2" onclick="selectDur(this)">2 Hours</button>
+          <button class="dur-btn"          data-dur="3" onclick="selectDur(this)">3 Hours</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Color</label>
+        <div class="color-picker">
+          <div class="color-dot blue   selected" data-color="blue"   onclick="selectColor(this)"></div>
+          <div class="color-dot pink"             data-color="pink"   onclick="selectColor(this)"></div>
+          <div class="color-dot green"            data-color="green"  onclick="selectColor(this)"></div>
+          <div class="color-dot yellow"           data-color="yellow" onclick="selectColor(this)"></div>
+          <div class="color-dot purple"           data-color="purple" onclick="selectColor(this)"></div>
+          <div class="color-dot orange"           data-color="orange" onclick="selectColor(this)"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost"   onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClass()">+ Add Class</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+  <script>
+
+    const TIME_SLOTS = [
+      '08:00','09:00','10:00','11:00','12:00',
+      '13:00','14:00','15:00','16:00','17:00','18:00'
+    ];
+    const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const DAY_SHORT = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+    let activeDay   = '';
+    let activeSlot  = 0;   // index into TIME_SLOTS
+    let activeDur   = 1;
+    let activeColor = 'blue';
+
+    /* ── Build entire table ── */
+    function buildGrid() {
+      const table   = document.getElementById('ttTable');
+      const entries = getLS('timetable');
+      table.innerHTML = '';
+
+      /* --- THEAD: time slots across top --- */
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+
+      // Corner cell
+      const thCorner = document.createElement('th');
+      thCorner.textContent = 'DAY \\ TIME';
+      trHead.appendChild(thCorner);
+
+      TIME_SLOTS.forEach(function(t) {
+        const th = document.createElement('th');
+        th.textContent = t;
+        // Highlight current hour
+        const nowH = new Date().getHours();
+        if (parseInt(t) === nowH) th.classList.add('active-time');
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+      table.appendChild(thead);
+
+      /* --- TBODY: one row per day --- */
+      const tbody = document.createElement('tbody');
+
+      DAYS.forEach(function(day, di) {
+        const tr  = document.createElement('tr');
+
+        // Day label cell
+        const tdDay = document.createElement('td');
+        tdDay.className = 'day-label day-' + DAY_SHORT[di].charAt(0).toUpperCase() + DAY_SHORT[di].slice(1).toLowerCase();
+        tdDay.textContent = DAY_SHORT[di];
+        tr.appendChild(tdDay);
+
+        // Track which slot indices are already consumed by a multi-slot class
+        const occupied = {}; // slotIndex → true
+
+        // Pre-scan entries for this day to mark occupied slots
+        entries.forEach(function(e) {
+          if (e.day !== day) return;
+          const si = TIME_SLOTS.indexOf(e.time);
+          if (si === -1) return;
+          for (let x = 0; x < (e.duration || 1); x++) {
+            occupied[si + x] = e.id; // mark as occupied by this entry id
+          }
+        });
+
+        let si = 0;
+        while (si < TIME_SLOTS.length) {
+          // Check if there's a class starting at this slot for this day
+          const cls = entries.find(function(e) {
+            return e.day === day && e.time === TIME_SLOTS[si];
+          });
+
+          if (cls) {
+            const dur = cls.duration || 1;
+            const td  = document.createElement('td');
+            td.className = 'slot-cell';
+            td.colSpan   = dur; // MERGE columns for multi-hour classes
+
+            const chip = document.createElement('div');
+            chip.className = 'class-chip chip-' + (cls.color || 'blue');
+            chip.innerHTML =
+              '<div class="chip-subject">' + escHtml(cls.subject) + '</div>' +
+              '<div class="chip-location">📍 ' + escHtml(cls.location || '—') + '</div>' +
+              '<div class="chip-hours">⏱ ' + dur + (dur > 1 ? ' hrs' : ' hr') + ' · ' + TIME_SLOTS[si] + '–' + (TIME_SLOTS[si + dur] || 'end') + '</div>' +
+              '<button class="chip-delete" onclick="deleteClass(' + cls.id + ')">✕</button>';
+
+            td.appendChild(chip);
+            tr.appendChild(td);
+            si += dur; // skip the merged slots
+
+          } else if (occupied[si] && occupied[si] !== true) {
+            // This slot is inside a multi-slot class started earlier — skip, already merged
+            si++;
+          } else {
+            // Empty slot — show + button
+            const td = document.createElement('td');
+            td.className = 'slot-cell';
+
+            const btn = document.createElement('button');
+            btn.className = 'add-slot-btn';
+            btn.textContent = '+';
+            btn.title = 'Add class: ' + day + ' at ' + TIME_SLOTS[si];
+            ;(function(d, s) {
+              btn.onclick = function() { openModal(d, s); };
+            })(day, si);
+
+            td.appendChild(btn);
+            tr.appendChild(td);
+            si++;
+          }
+        }
+
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+    }
+
+    /* ── Modal open ── */
+    function openModal(day, slotIdx) {
+      activeDay   = day;
+      activeSlot  = slotIdx;
+      activeDur   = 1;
+      activeColor = 'blue';
+
+      document.getElementById('mSubject').value  = '';
+      document.getElementById('mLocation').value = '';
+      document.getElementById('modalSubtitle').textContent =
+        day + ' · ' + TIME_SLOTS[slotIdx] + ' onwards';
+
+      // Reset duration buttons
+      document.querySelectorAll('.dur-btn').forEach(function(b) {
+        b.classList.toggle('selected', b.dataset.dur === '1');
+      });
+      // Reset color dots
+      document.querySelectorAll('.color-dot').forEach(function(d) {
+        d.classList.toggle('selected', d.dataset.color === 'blue');
+      });
+
+      // Disable duration options that would overflow the timetable
+      document.querySelectorAll('.dur-btn').forEach(function(b) {
+        const needed = parseInt(b.dataset.dur);
+        const fits   = (activeSlot + needed) <= TIME_SLOTS.length;
+        b.disabled = !fits;
+        b.style.opacity = fits ? '1' : '0.3';
+      });
+
+      document.getElementById('ttModal').style.display = 'flex';
+      setTimeout(function() { document.getElementById('mSubject').focus(); }, 80);
+    }
+
+    function closeModal() {
+      document.getElementById('ttModal').style.display = 'none';
+    }
+
+    function selectDur(el) {
+      if (el.disabled) return;
+      activeDur = parseInt(el.dataset.dur);
+      document.querySelectorAll('.dur-btn').forEach(function(b) { b.classList.remove('selected'); });
+      el.classList.add('selected');
+
+      // Update subtitle to show merged range
+      const endSlot = TIME_SLOTS[activeSlot + activeDur] || 'end';
+      document.getElementById('modalSubtitle').textContent =
+        activeDay + ' · ' + TIME_SLOTS[activeSlot] + ' – ' + endSlot +
+        (activeDur > 1 ? ' (' + activeDur + ' hrs)' : '');
+    }
+
+    function selectColor(el) {
+      document.querySelectorAll('.color-dot').forEach(function(d) { d.classList.remove('selected'); });
+      el.classList.add('selected');
+      activeColor = el.dataset.color;
+    }
+
+    /* ── Save class ── */
+    function saveClass() {
+      const subject  = document.getElementById('mSubject').value.trim();
+      const location = document.getElementById('mLocation').value.trim();
+      if (!subject) { showToast('Enter a subject name', '#ff6eb4'); return; }
+
+      // Check for conflicts in merged range
+      const entries = getLS('timetable');
+      for (let x = 0; x < activeDur; x++) {
+        const slotTime = TIME_SLOTS[activeSlot + x];
+        const conflict = entries.find(function(e) {
+          if (e.day !== activeDay) return false;
+          const si = TIME_SLOTS.indexOf(e.time);
+          // does existing class overlap with our new range?
+          for (let y = 0; y < (e.duration || 1); y++) {
+            if (TIME_SLOTS[si + y] === slotTime) return true;
+          }
+          return false;
+        });
+        if (conflict) {
+          showToast('Time slot ' + slotTime + ' is already taken!', '#ff6eb4');
+          return;
+        }
+      }
+
+      entries.push({
+        id:       Date.now(),
+        day:      activeDay,
+        time:     TIME_SLOTS[activeSlot],
+        subject:  subject,
+        location: location,
+        color:    activeColor,
+        duration: activeDur
+      });
+      setLS('timetable', entries);
+      closeModal();
+      buildGrid();
+      showToast(activeDur > 1 ? 'Class added (' + activeDur + ' hrs)!' : 'Class added!');
+    }
+
+    /* ── Delete class ── */
+    function deleteClass(id) {
+      if (!confirm('Remove this class?')) return;
+      setLS('timetable', getLS('timetable').filter(function(e) { return e.id !== id; }));
+      buildGrid();
+      showToast('Class removed', 'rgba(255,80,80,0.9)');
+    }
+
+    // Close on backdrop click / Escape key
+    document.getElementById('ttModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Enter' && document.getElementById('ttModal').style.display === 'flex') saveClass();
+    });
+
+    document.addEventListener('DOMContentLoaded', buildGrid);
+  </script>
+  <script>
+    (function() {
+      const user = JSON.parse(localStorage.getItem('authUser') || 'null');
+      const nav  = document.getElementById('pageNav');
+      if (!nav) return;
+      nav.innerHTML =
+        '<a href="index.html" class="nav-btn nav-btn-home">🏠 Home</a>' +
+        (user
+          ? '<a href="profile.html" class="nav-btn nav-btn-login">👤 ' + user.name.split(' ')[0] + '</a>'
+          : '<a href="loginpage.html" class="nav-btn nav-btn-login">Login</a>');
+    })();
+  </script>
+</body>
+</html>

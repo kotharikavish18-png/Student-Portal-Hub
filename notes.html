@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notes — Student Hub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="page-body">
+
+  <header class="page-topbar">
+    <a href="index.html" class="back-btn">← Back</a>
+    <span class="page-title">Notes</span>
+      <nav class="topbar-nav" id="pageNav"></nav>
+  </header>
+
+  <main class="page-content">
+
+    <div class="info-card">
+      <h3>New Note</h3>
+      <form id="noteForm">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" name="noteTitle" placeholder="e.g. Lecture on Thermodynamics" required/>
+        </div>
+        <div class="form-group">
+          <label>Note Content</label>
+          <textarea name="noteBody" placeholder="Write your note here..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">📝 Save Note</button>
+      </form>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>📒 My Notes</h2>
+    </div>
+
+    <div class="notes-grid" id="notesGrid"></div>
+
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    (function() {
+      const user   = JSON.parse(localStorage.getItem('authUser') || 'null');
+      const nav    = document.getElementById('pageNav');
+      if (!nav) return;
+      const homeBtn  = '<a href="index.html" class="nav-btn nav-btn-home">🏠 Home</a>';
+      const loginBtn = user
+        ? '<a href="profile.html" class="nav-btn nav-btn-login">👤 ' + user.name.split(' ')[0] + '</a>'
+        : '<a href="loginpage.html" class="nav-btn nav-btn-login">Login</a>';
+      nav.innerHTML = homeBtn + loginBtn;
+    })();
+  </script>
+</body>
+</html>

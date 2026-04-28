@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Money Balance — Student Hub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    
+    .money-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+   
+    .money-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    
+    .balance-hero {
+      text-align: center;
+      padding: 36px 28px;
+      background: linear-gradient(135deg,rgba(74,158,255,0.13),rgba(110,198,255,0.06));
+      border: 1.5px solid rgba(74,158,255,0.22);
+      border-radius: 24px;
+    }
+    .balance-hero .balance-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 10px;
+    }
+    .balance-hero .balance-amount {
+      font-family: 'Syne', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .balance-positive { color: #6ee7b7; }
+    .balance-negative { color: #ff6b6b; }
+
+    /* ── Stat boxes ── */
+    .money-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .stat-box {
+      padding: 20px;
+      border-radius: 18px;
+      text-align: center;
+    }
+    .stat-box.income-box { background: rgba(110,231,183,0.1); border: 1.5px solid rgba(110,231,183,0.22); }
+    .stat-box.expense-box { background: rgba(255,107,107,0.1); border: 1.5px solid rgba(255,107,107,0.22); }
+    .stat-box .s-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .income-box .s-label { color: #6ee7b7; }
+    .expense-box .s-label { color: #ff6b6b; }
+    .stat-box .s-val {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 22px;
+    }
+
+    /* ── Add transaction form ── */
+    .add-form-card {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      padding: 24px;
+    }
+    .add-form-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 18px;
+    }
+
+    
+    .money-right {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      padding: 24px;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+    }
+    .money-right .section-header { margin-bottom: 14px; }
+
+    .txn-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .txn-scroll::-webkit-scrollbar { width: 4px; }
+    .txn-scroll::-webkit-scrollbar-track { background: transparent; }
+    .txn-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+    .transaction-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .transaction-item:hover { background: rgba(255,255,255,0.09); }
+
+    .tx-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .tx-income .tx-icon { background: rgba(110,231,183,0.15); }
+    .tx-expense .tx-icon { background: rgba(255,107,107,0.15); }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-desc { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-date { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .tx-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; white-space: nowrap; }
+    .tx-income .tx-amount { color: #6ee7b7; }
+    .tx-expense .tx-amount { color: #ff6b6b; }
+
+    @media (max-width: 860px) {
+      .money-layout { grid-template-columns: 1fr; }
+      .money-right { min-height: auto; }
+    }
+  </style>
+</head>
+<body class="page-body">
+
+  <header class="page-topbar">
+    <a href="index.html" class="back-btn">← Back</a>
+    <span class="page-title">Money Balance</span>
+  </header>
+
+  <main class="page-content" style="max-width:1000px;">
+
+    <div class="money-layout">
+
+      
+      <div class="money-left">
+
+        
+        <div class="balance-hero">
+          <div class="balance-label">Total Balance</div>
+          <div class="balance-amount balance-positive" id="totalBalance">₹0.00</div>
+        </div>
+
+      
+        <div class="money-stats">
+          <div class="stat-box income-box">
+            <div class="s-label">💰 Income</div>
+            <div class="s-val" id="totalIncome">₹0.00</div>
+          </div>
+          <div class="stat-box expense-box">
+            <div class="s-label">💸 Expense</div>
+            <div class="s-val" id="totalExpense">₹0.00</div>
+          </div>
+        </div>
+
+    
+        <div class="add-form-card">
+          <h3>Add Transaction</h3>
+          <form id="moneyForm">
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" name="moneyDesc" placeholder="e.g. Canteen lunch, Scholarship" required/>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" name="moneyAmount" placeholder="0.00" min="0.01" step="0.01" required/>
+              </div>
+              <div class="form-group">
+                <label>Type</label>
+                <select name="moneyType">
+                  <option value="income">💰 Income</option>
+                  <option value="expense">💸 Expense</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">+ Add Transaction</button>
+          </form>
+        </div>
+
+      </div>
+
+     
+      <div class="money-right">
+        <div class="section-header">
+          <h2>📋 Transactions</h2>
+        </div>
+        <div class="txn-scroll">
+          <div id="txnList"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    // Override renderMoney to use new tx-info structure
+    window.renderMoney = function() {
+      const txns = getLS('transactions');
+      let income = 0, expense = 0;
+      txns.forEach(t => { t.type === 'income' ? income += t.amount : expense += t.amount; });
+      const balance = income - expense;
+
+      const balEl = document.getElementById('totalBalance');
+      const incEl = document.getElementById('totalIncome');
+      const expEl = document.getElementById('totalExpense');
+      if (balEl) {
+        balEl.textContent = `₹${balance.toFixed(2)}`;
+        balEl.className = 'balance-amount ' + (balance >= 0 ? 'balance-positive' : 'balance-negative');
+      }
+      if (incEl) incEl.textContent = `₹${income.toFixed(2)}`;
+      if (expEl) expEl.textContent = `₹${expense.toFixed(2)}`;
+
+      const list = document.getElementById('txnList');
+      if (!list) return;
+      if (!txns.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">💰</div><p>No transactions yet!<br/>Add one on the left.</p></div>`;
+        return;
+      }
+      list.innerHTML = [...txns].reverse().map(t => `
+        <div class="transaction-item tx-${t.type}">
+          <div class="tx-icon">${t.type === 'income' ? '💰' : '💸'}</div>
+          <div class="tx-info">
+            <div class="tx-desc">${escHtml(t.desc)}</div>
+            <div class="tx-date">${t.date}</div>
+          </div>
+          <div class="tx-amount">${t.type === 'income' ? '+' : '-'}₹${t.amount.toFixed(2)}</div>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('transactions',${t.id},renderMoney)">✕</button>
+        </div>`).join('');
+    };
+  </script>
+</body>
+</html>

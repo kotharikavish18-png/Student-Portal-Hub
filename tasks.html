@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tasks — Student Hub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="page-body">
+
+  <header class="page-topbar">
+    <a href="index.html" class="back-btn">← Back</a>
+    <span class="page-title">Tasks</span>
+      <nav class="topbar-nav" id="pageNav"></nav>
+  </header>
+
+  <main class="page-content">
+
+    <div class="info-card">
+      <h3>Add Task</h3>
+      <form id="taskForm">
+        <div class="form-group">
+          <label>Task Description</label>
+          <input type="text" name="taskText" placeholder="e.g. Complete Assignment 3" required/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priority</label>
+            <select name="taskPriority">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" name="taskDue"/>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">+ Add Task</button>
+      </form>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-header">
+      <h2>✅ My Tasks</h2>
+    </div>
+
+    <div id="taskList"></div>
+
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    (function() {
+      const user   = JSON.parse(localStorage.getItem('authUser') || 'null');
+      const nav    = document.getElementById('pageNav');
+      if (!nav) return;
+      const homeBtn  = '<a href="index.html" class="nav-btn nav-btn-home">🏠 Home</a>';
+      const loginBtn = user
+        ? '<a href="profile.html" class="nav-btn nav-btn-login">👤 ' + user.name.split(' ')[0] + '</a>'
+        : '<a href="loginpage.html" class="nav-btn nav-btn-login">Login</a>';
+      nav.innerHTML = homeBtn + loginBtn;
+    })();
+  </script>
+</body>
+</html>

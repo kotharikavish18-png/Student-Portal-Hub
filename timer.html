@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Study Timer — Student Hub</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    .timer-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── Left panel ── */
+    .timer-left {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      border-radius: 28px;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* ── Rectangle timer display ── */
+    .timer-rect {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(74,158,255,0.12), rgba(110,198,255,0.05));
+      border: 2px solid rgba(74,158,255,0.25);
+      border-radius: 20px;
+      padding: 40px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* glowing top bar accent */
+    .timer-rect::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #4a9eff, #6ec6ff, #4a9eff);
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* subtle glow behind digits */
+    .timer-rect::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px; height: 80px;
+      background: radial-gradient(ellipse, rgba(74,158,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .timer-digits {
+      font-family: 'Syne', sans-serif;
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #4a9eff, #6ec6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timer-sub-label {
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Progress bar under digits ── */
+    .timer-progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50px;
+      margin-top: 6px;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+    .timer-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4a9eff, #6ec6ff);
+      border-radius: 50px;
+      transition: width 1s linear;
+    }
+
+    /* ── Status ── */
+    .timer-status {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Controls ── */
+    .timer-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+    .timer-controls .btn { flex: 1; justify-content: center; text-align: center; }
+
+    /* ── Presets ── */
+    .timer-presets { width: 100%; }
+    .timer-presets h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .preset-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .preset-btns .btn { text-align: center; }
+
+    /* ── Right panel ── */
+    .timer-right {
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.09);
+      border-radius: 28px;
+      padding: 28px;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+    .timer-right .section-header { margin-bottom: 16px; }
+
+    .sessions-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .sessions-scroll::-webkit-scrollbar { width: 4px; }
+    .sessions-scroll::-webkit-scrollbar-track { background: transparent; }
+    .sessions-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+    .session-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+    .session-item:hover { background: rgba(255,255,255,0.09); }
+
+    .session-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a9eff, #6ec6ff);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .session-info { flex: 1; }
+    .session-time {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: #4a9eff;
+    }
+    .session-date {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 2px;
+    }
+
+    .total-box {
+      background: linear-gradient(135deg, rgba(74,158,255,0.12), rgba(110,198,255,0.06));
+      border: 1.5px solid rgba(74,158,255,0.2);
+      border-radius: 14px;
+      padding: 16px 20px;
+      text-align: center;
+      margin-top: 16px;
+    }
+    .total-box .t-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
+    }
+    .total-box .t-val {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: #6ec6ff;
+    }
+
+    @media (max-width: 860px) {
+      .timer-layout { grid-template-columns: 1fr; }
+      .timer-right { min-height: auto; }
+      .timer-digits { font-size: 48px; }
+    }
+  </style>
+</head>
+<body class="page-body">
+
+  <header class="page-topbar">
+    <a href="index.html" class="back-btn">← Back</a>
+    <span class="page-title">Study Timer</span>
+    <nav class="topbar-nav" id="pageNav"></nav>
+  </header>
+
+  <main class="page-content" style="max-width:1000px;">
+    <div class="timer-layout">
+
+      <!-- ═══ LEFT: Rectangle Timer ═══ -->
+      <div class="timer-left">
+
+        <!-- Rectangle display -->
+        <div class="timer-rect">
+          <div class="timer-digits" id="timerDisplay">00:00:00</div>
+          <div class="timer-sub-label">hours &nbsp;·&nbsp; minutes &nbsp;·&nbsp; seconds</div>
+          <div class="timer-progress-bar">
+            <div class="timer-progress-fill" id="timerProgressFill"></div>
+          </div>
+        </div>
+
+        <div class="timer-status" id="timerStatus">Ready to study</div>
+
+        <div class="timer-controls">
+          <button class="btn btn-primary" id="btnStart">▶ Start</button>
+          <button class="btn btn-ghost"   id="btnPause">⏸ Pause</button>
+          <button class="btn btn-danger"  id="btnReset">↺ Reset</button>
+        </div>
+
+        <div class="timer-presets">
+          <h4>Quick Presets</h4>
+          <div class="preset-btns">
+            <button class="btn btn-ghost btn-sm" onclick="setQuickTimer(25*60)">🍅 25 min</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickTimer(45*60)">📚 45 min</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickTimer(5*60)">☕ 5 min</button>
+            <button class="btn btn-ghost btn-sm" onclick="setQuickTimer(15*60)">🌿 15 min</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ RIGHT: Sessions Log ═══ -->
+      <div class="timer-right">
+        <div class="section-header">
+          <h2>📊 Sessions</h2>
+          <button class="btn btn-ghost btn-sm" onclick="clearSessions()">Clear All</button>
+        </div>
+
+        <div class="sessions-scroll">
+          <div id="sessionLog">
+            <div class="empty-state">
+              <div class="empty-icon">⏱</div>
+              <p>No sessions yet.<br/>Start studying!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="total-box">
+          <div class="t-label">Total Study Time Today</div>
+          <div class="t-val" id="totalStudyTime">00:00:00</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="js/script.js"></script>
+  <script>
+    let presetSeconds = 0;
+
+    function setQuickTimer(seconds) {
+      resetTimer();
+      presetSeconds = seconds;
+      timerSeconds  = 0;
+      updateTimerDisplay();
+      showToast('Preset: ' + Math.floor(seconds / 60) + ' min — press Start!');
+    }
+
+    // Wrap updateTimerDisplay to also update progress bar
+    const _origUpdate = updateTimerDisplay;
+    window.updateTimerDisplay = function () {
+      _origUpdate();
+      updateProgressBar();
+    };
+
+    function updateProgressBar() {
+      const fill = document.getElementById('timerProgressFill');
+      if (!fill) return;
+      const pct = presetSeconds ? Math.min((timerSeconds / presetSeconds) * 100, 100) : 100;
+      fill.style.width = pct + '%';
+    }
+
+    // Log session on pause
+    const origPause = pauseTimer;
+    window.pauseTimer = function () {
+      if (timerRunning && timerSeconds > 0) logSession();
+      origPause();
+    };
+
+    function logSession() {
+      const h = Math.floor(timerSeconds / 3600);
+      const m = Math.floor((timerSeconds % 3600) / 60);
+      const s = timerSeconds % 60;
+      const sessions = JSON.parse(localStorage.getItem('timerSessions') || '[]');
+      sessions.unshift({
+        secs: timerSeconds,
+        time: fmt2(h) + ':' + fmt2(m) + ':' + fmt2(s),
+        date: new Date().toLocaleTimeString()
+      });
+      localStorage.setItem('timerSessions', JSON.stringify(sessions.slice(0, 20)));
+      renderSessions();
+    }
+
+    function renderSessions() {
+      const log      = document.getElementById('sessionLog');
+      const sessions = JSON.parse(localStorage.getItem('timerSessions') || '[]');
+      if (!sessions.length) {
+        log.innerHTML = '<div class="empty-state"><div class="empty-icon">⏱</div><p>No sessions yet.<br/>Start studying!</p></div>';
+        updateTotalTime([]);
+        return;
+      }
+      log.innerHTML = sessions.map(function (s, i) {
+        return '<div class="session-item">'
+          + '<div class="session-num">' + (sessions.length - i) + '</div>'
+          + '<div class="session-info">'
+          + '<div class="session-time">' + s.time + '</div>'
+          + '<div class="session-date">' + s.date + '</div>'
+          + '</div></div>';
+      }).join('');
+      updateTotalTime(sessions);
+    }
+
+    function updateTotalTime(sessions) {
+      const total = sessions.reduce(function (acc, s) { return acc + (s.secs || 0); }, 0);
+      const h = Math.floor(total / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      const el = document.getElementById('totalStudyTime');
+      if (el) el.textContent = fmt2(h) + ':' + fmt2(m) + ':' + fmt2(s);
+    }
+
+    function clearSessions() {
+      if (!confirm('Clear all sessions?')) return;
+      localStorage.removeItem('timerSessions');
+      presetSeconds = 0;
+      renderSessions();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderSessions);
+  </script>
+  <script>
+    (function () {
+      const user = JSON.parse(localStorage.getItem('authUser') || 'null');
+      const nav  = document.getElementById('pageNav');
+      if (!nav) return;
+      const homeBtn  = '<a href="index.html" class="nav-btn nav-btn-home">🏠 Home</a>';
+      const loginBtn = user
+        ? '<a href="profile.html" class="nav-btn nav-btn-login">👤 ' + user.name.split(' ')[0] + '</a>'
+        : '<a href="loginpage.html" class="nav-btn nav-btn-login">Login</a>';
+      nav.innerHTML = homeBtn + loginBtn;
+    })();
+  </script>
+</body>
+</html>

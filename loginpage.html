@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Student Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0d1b3e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(13,27,62,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      z-index: 10;
+    }
+    .top-bar a {
+      display: flex; align-items: center; gap: 8px;
+      color: #fff; text-decoration: none;
+      font-size: 14px;
+      padding: 7px 18px;
+      border-radius: 50px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      transition: background 0.2s;
+    }
+    .top-bar a:hover { background: rgba(255,255,255,0.12); }
+    .top-bar .brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 17px;
+      color: #fff;
+      margin-left: 4px;
+    }
+
+  
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 40px 36px 36px;
+      margin-top: 64px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    }
+
+    
+    .auth-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 5px;
+      margin-bottom: 32px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background 0.22s, color 0.22s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #4a9eff, #6ec6ff);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(74,158,255,0.3);
+    }
+
+    
+    .form-heading {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .form-subheading {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 28px;
+    }
+
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 7px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .form-group input:focus {
+      border-color: #4a9eff;
+      background: rgba(74,158,255,0.08);
+    }
+    .form-group input::placeholder { color: rgba(255,255,255,0.2); }
+
+    
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4a9eff, #6ec6ff);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: transform 0.18s, box-shadow 0.18s;
+      box-shadow: 0 6px 20px rgba(74,158,255,0.3);
+    }
+    .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(74,158,255,0.4); }
+    .auth-btn:active { transform: scale(0.97); }
+
+    /* ── Error / success messages ── */
+    .auth-msg {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .auth-msg.error {
+      background: rgba(255,80,80,0.12);
+      border: 1px solid rgba(255,80,80,0.25);
+      color: #ff8080;
+      display: block;
+    }
+    .auth-msg.success {
+      background: rgba(110,231,183,0.12);
+      border: 1px solid rgba(110,231,183,0.25);
+      color: #6ee7b7;
+      display: block;
+    }
+
+    /* ── Logged-in state ── */
+    .logged-in-box {
+      text-align: center;
+      padding: 10px 0 6px;
+    }
+    .logged-in-box .avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a9eff, #6ec6ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+    }
+    .logged-in-box h2 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .logged-in-box p { font-size: 14px; color: rgba(255,255,255,0.45); margin-bottom: 28px; }
+    .btn-row { display: flex; gap: 10px; }
+    .btn-outline {
+      flex: 1; padding: 12px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      background: transparent;
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.08); }
+    .btn-logout {
+      flex: 1; padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,80,80,0.12);
+      color: #ff8080;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid rgba(255,80,80,0.2);
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,80,80,0.22); }
+
+    .or-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0;
+      color: rgba(255,255,255,0.2);
+      font-size: 12px;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+    }
+
+
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 46px; }
+    .pw-toggle {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer; font-size: 16px;
+      transition: color 0.2s;
+    }
+    .pw-toggle:hover { color: rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="index.html">← Back</a>
+    <span class="brand">📘 Student Hub</span>
+  </div>
+
+  <div class="auth-card" id="authCard">
+
+    
+    <div class="logged-in-box" id="loggedInView" style="display:none;">
+      <div class="avatar">👤</div>
+      <h2 id="liName">—</h2>
+      <p id="liEmail">—</p>
+      <div class="btn-row">
+        <a href="profile.html" class="btn-outline">View Profile</a>
+        <button class="btn-logout" onclick="logoutUser()">Log Out</button>
+      </div>
+    </div>
+
+   
+    <div id="authForms">
+      
+      <div class="auth-tabs">
+        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Login</button>
+        <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+     
+      <div class="auth-msg" id="authMsg"></div>
+
+      
+      <div id="loginForm">
+        <div class="form-heading">Welcome back 👋</div>
+        <div class="form-subheading">Login to your Student Hub account</div>
+
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="loginPassword" placeholder="Enter password"/>
+            <button class="pw-toggle" onclick="togglePw('loginPassword', this)">👁</button>
+          </div>
+        </div>
+        <button class="auth-btn" onclick="loginUser()">Login →</button>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signupForm" style="display:none;">
+        <div class="form-heading">Create account ✨</div>
+        <div class="form-subheading">Join Student Hub — it's free</div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="signupName" placeholder="e.g. Akhilesh Singh Rajpoot"/>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="signupEmail" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Course / Branch</label>
+          <input type="text" id="signupCourse" placeholder="e.g. B.Tech CSE"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="signupPassword" placeholder="Create a password (min 6 chars)"/>
+            <button class="pw-toggle" onclick="togglePw('signupPassword', this)">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="signupConfirm" placeholder="Re-enter password"/>
+            <button class="pw-toggle" onclick="togglePw('signupConfirm', this)">👁</button>
+          </div>
+        </div>
+        <button class="auth-btn" onclick="signupUser()">Create Account →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    
+    function showMsg(text, type) {
+      const el = document.getElementById('authMsg');
+      el.textContent = text;
+      el.className = 'auth-msg ' + type;
+    }
+    function clearMsg() {
+      const el = document.getElementById('authMsg');
+      el.className = 'auth-msg';
+      el.textContent = '';
+    }
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+      else                         { inp.type = 'password'; btn.textContent = '👁'; }
+    }
+
+    function switchTab(tab) {
+      clearMsg();
+      document.getElementById('tabLogin').classList.toggle('active',  tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('loginForm').style.display  = tab === 'login'  ? 'block' : 'none';
+      document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+    }
+
+    
+    function signupUser() {
+      clearMsg();
+      const name     = document.getElementById('signupName').value.trim();
+      const email    = document.getElementById('signupEmail').value.trim().toLowerCase();
+      const course   = document.getElementById('signupCourse').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const confirm  = document.getElementById('signupConfirm').value;
+
+      if (!name || !email || !course || !password) { showMsg('Please fill in all fields.', 'error'); return; }
+      if (password.length < 6)                     { showMsg('Password must be at least 6 characters.', 'error'); return; }
+      if (password !== confirm)                     { showMsg('Passwords do not match.', 'error'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Enter a valid email address.', 'error'); return; }
+
+      
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.email === email)) { showMsg('This email is already registered. Please login.', 'error'); return; }
+
+     
+      const newUser = { name, email, course, password };
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+
+      
+      const authUser = { name, email, course };
+      localStorage.setItem('authUser', JSON.stringify(authUser));
+
+    
+      localStorage.setItem('profile', JSON.stringify({ name, email, course, saved: new Date().toLocaleDateString() }));
+
+      showMsg('Account created! Redirecting…', 'success');
+      setTimeout(() => window.location.href = 'profile.html', 1200);
+    }
+
+   
+    function loginUser() {
+      clearMsg();
+      const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) { showMsg('Please fill in all fields.', 'error'); return; }
+
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user  = users.find(u => u.email === email && u.password === password);
+
+      if (!user) { showMsg('Incorrect email or password.', 'error'); return; }
+
+      const authUser = { name: user.name, email: user.email, course: user.course };
+      localStorage.setItem('authUser', JSON.stringify(authUser));
+      localStorage.setItem('profile', JSON.stringify({ name: user.name, email: user.email, course: user.course, saved: new Date().toLocaleDateString() }));
+
+      showMsg('Login successful! Redirecting…', 'success');
+      setTimeout(() => window.location.href = 'index.html', 1100);
+    }
+
+   
+    function logoutUser() {
+      if (!confirm('Log out of Student Hub?')) return;
+      localStorage.removeItem('authUser');
+      localStorage.removeItem('profile');
+      location.reload();
+    }
+
+    
+    (function init() {
+      const user = JSON.parse(localStorage.getItem('authUser') || 'null');
+      if (user) {
+        document.getElementById('authForms').style.display   = 'none';
+        document.getElementById('loggedInView').style.display = 'block';
+        document.getElementById('liName').textContent  = user.name;
+        document.getElementById('liEmail').textContent = user.email + ' · ' + user.course;
+      }
+    })();
+
+    // ── Enter key support ──
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter') return;
+      const loginVisible = document.getElementById('loginForm').style.display !== 'none';
+      if (loginVisible) loginUser(); else signupUser();
+    });
+  </script>
+</body>
+</html>
